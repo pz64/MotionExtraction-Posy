@@ -1,8 +1,8 @@
 #include<algorithm>
-#include "MotionDetect.h"
+#include "MotionExtraction.h"
 #include "opencv2/opencv.hpp"
 
-pz::MotionDetect::MotionDetect(std::string videoPath)
+pz::MotionExtraction::MotionExtraction(std::string videoPath)
 {
 	_videoCapture = std::make_unique<cv::VideoCapture>(videoPath);
 
@@ -12,18 +12,18 @@ pz::MotionDetect::MotionDetect(std::string videoPath)
 	}
 }
 
-pz::MotionDetect::~MotionDetect()
+pz::MotionExtraction::~MotionExtraction()
 {
 	_videoCapture->release();
 	cv::destroyAllWindows();
 }
 
-void pz::MotionDetect::setFrameOffset(std::size_t offset)
+void pz::MotionExtraction::setFrameOffset(std::size_t offset)
 {
 	_frameOffset = offset;
 }
 
-void pz::MotionDetect::render()
+void pz::MotionExtraction::render()
 {
 	cv::Mat frame, overlayFrame, diffFrame;
 

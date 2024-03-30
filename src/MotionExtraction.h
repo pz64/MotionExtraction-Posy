@@ -7,10 +7,10 @@ namespace cv {
 }
 
 namespace pz {
-	class MotionDetect {
+	class MotionExtraction {
 	public:
-		MotionDetect(std::string videoPath);
-		~MotionDetect();
+		MotionExtraction(std::string videoPath);
+		~MotionExtraction();
 
 		void setFrameOffset(std::size_t offset);
 		void render();

@@ -4,14 +4,14 @@
 #include <iostream>
 #include "opencv2/opencv.hpp"
 #include "opencv2/highgui.hpp"
-#include "MotionDetect.h"
+#include "MotionExtraction.h"
 #include<limits>
 
 int main()
 {
 
-    pz::MotionDetect detect{ "../samples/snow.mp4" };
-    detect.setFrameOffset(10000);
-    detect.render();
+    pz::MotionExtraction extraction{ "../samples/snow.mp4" };
+    extraction.setFrameOffset(10000);
+    extraction.render();
     return 0;
 }

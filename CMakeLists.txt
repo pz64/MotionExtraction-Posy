@@ -9,7 +9,7 @@ if (POLICY CMP0141)
   set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
-project ("MotionDetection")
+project ("MotionExtraction")
 
 set(OpenCV_DIR C:/lib/cv/opencv/build)
 
@@ -18,13 +18,13 @@ find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS}) 
 
 # Add source to this project's executable.
-add_executable (MotionDetection "src/Main.cpp"  "src/MotionDetect.h" "src/MotionDetect.cpp")
+add_executable (MotionExtraction "src/Main.cpp"  "src/MotionExtraction.h" "src/MotionExtraction.cpp")
 
 
-target_link_libraries(MotionDetection ${OpenCV_LIBS})
+target_link_libraries(MotionExtraction ${OpenCV_LIBS})
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET MotionDetection PROPERTY CXX_STANDARD 20)
+  set_property(TARGET MotionExtraction PROPERTY CXX_STANDARD 20)
 endif()
 
 # TODO: Add tests and install targets if needed.
