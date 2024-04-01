@@ -1,56 +1,50 @@
 #include<algorithm>
+#include <expected>
 #include "MotionExtraction.h"
-#include "opencv2/opencv.hpp"
 
 pz::MotionExtraction::MotionExtraction(std::string videoPath)
 {
-	_videoCapture = std::make_unique<cv::VideoCapture>(videoPath);
+	_videoCapture = cv::VideoCapture(videoPath);
 
-	if (!_videoCapture->isOpened())
+	if (!_videoCapture.isOpened())
 	{
 		std::cout << "Error opening video stream or file" << std::endl;
 	}
+
+	totalFrames = _videoCapture.get(cv::CAP_PROP_FRAME_COUNT);
 }
 
 pz::MotionExtraction::~MotionExtraction()
 {
-	_videoCapture->release();
+	_videoCapture.release();
 	cv::destroyAllWindows();
 }
 
-void pz::MotionExtraction::setFrameOffset(std::size_t offset)
+auto pz::MotionExtraction::getDiff(double currentOffset) -> std::expected<cv::Mat, pz::Error>
 {
-	_frameOffset = offset;
-}
+	auto targetFrame = std::clamp(currentOffset - frameOffset, 0.0, currentOffset);
 
-void pz::MotionExtraction::render()
-{
-	cv::Mat frame, overlayFrame, diffFrame;
+	_videoCapture.set(cv::CAP_PROP_POS_FRAMES, targetFrame);
 
-	while (true)
+	if (!_videoCapture.read(_overlayFrame))
 	{
-
-		auto currentFrame = _videoCapture->get(cv::CAP_PROP_POS_FRAMES);
-
-		std::size_t targetFrame = std::clamp(static_cast<double>( currentFrame - _frameOffset), 0.0, currentFrame);
-
-		_videoCapture->set(cv::CAP_PROP_POS_FRAMES, targetFrame);
-		_videoCapture->read(overlayFrame);
-
-		_videoCapture->set(cv::CAP_PROP_POS_FRAMES, currentFrame);
-		_videoCapture->read(frame);
-
-		if (frame.empty() || overlayFrame.empty())
-			break;
-
-	
-		cv::absdiff(frame, overlayFrame, diffFrame);
-
-		cv::imshow("Frame", diffFrame);
-
-		// Press  ESC on keyboard to exit
-		char c = (char)cv::waitKey(25);
-		if (c == 27)
-			break;
+		return std::unexpected(Error::READ_ERROR);
 	}
+
+	_videoCapture.set(cv::CAP_PROP_POS_FRAMES, currentOffset);
+
+	if (!_videoCapture.read(_frame))
+	{
+		return std::unexpected(Error::READ_ERROR);
+	}
+
+	if (_frame.empty() || _overlayFrame.empty())
+	{
+		return std::unexpected(Error::MAT_EMPTY);
+	}
+		
+
+	cv::absdiff(_frame, _overlayFrame, _diffFrame);
+	
+	return _diffFrame;
 }
