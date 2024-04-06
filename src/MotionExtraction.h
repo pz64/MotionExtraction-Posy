@@ -1,24 +1,36 @@
 #pragma once
-#include<string>
-#include <memory>
 
-namespace cv {
-	class VideoCapture;
-}
+#include<string>
+#include<expected>
+#include <memory>
+#include "opencv2/opencv.hpp"
 
 namespace pz {
+
+	enum class Error {
+		MAT_EMPTY,
+		READ_ERROR,
+	};
+
 	class MotionExtraction {
 	public:
+		double totalFrames{};
+		double frameOffset{};
+		bool additive{ false };
+
 		MotionExtraction(std::string videoPath);
 		~MotionExtraction();
 
-		void setFrameOffset(std::size_t offset);
-		void render();
-
+		auto getDiff(double currentOffset) -> std::expected<cv::Mat, pz::Error>;
+		auto clearAdditiveFrame() -> void;
 
 	private:
-		std::unique_ptr<cv::VideoCapture> _videoCapture;
-		std::size_t _frameOffset;
-
+		cv::VideoCapture _videoCapture;
+		cv::Mat _frame;
+		cv::Mat _overlayFrame;
+		cv::Mat _diffFrame;
+		cv::Mat _additiveFrame;
 	};
 }
+
+

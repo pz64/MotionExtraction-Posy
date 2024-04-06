@@ -1,56 +1,69 @@
 #include<algorithm>
+#include <expected>
 #include "MotionExtraction.h"
-#include "opencv2/opencv.hpp"
 
 pz::MotionExtraction::MotionExtraction(std::string videoPath)
 {
-	_videoCapture = std::make_unique<cv::VideoCapture>(videoPath);
+	_videoCapture = cv::VideoCapture(videoPath);
 
-	if (!_videoCapture->isOpened())
+	if (!_videoCapture.isOpened())
 	{
 		std::cout << "Error opening video stream or file" << std::endl;
 	}
+
+	totalFrames = _videoCapture.get(cv::CAP_PROP_FRAME_COUNT);
 }
 
 pz::MotionExtraction::~MotionExtraction()
 {
-	_videoCapture->release();
+	_videoCapture.release();
 	cv::destroyAllWindows();
 }
 
-void pz::MotionExtraction::setFrameOffset(std::size_t offset)
+auto pz::MotionExtraction::getDiff(double currentOffset) -> std::expected<cv::Mat, pz::Error>
 {
-	_frameOffset = offset;
+	auto targetFrame = std::clamp(currentOffset - frameOffset, 0.0, currentOffset);
+
+	_videoCapture.set(cv::CAP_PROP_POS_FRAMES, targetFrame);
+
+	if (!_videoCapture.read(_overlayFrame))
+	{
+		return std::unexpected(Error::READ_ERROR);
+	}
+
+	_videoCapture.set(cv::CAP_PROP_POS_FRAMES, currentOffset);
+
+	if (!_videoCapture.read(_frame))
+	{
+		return std::unexpected(Error::READ_ERROR);
+	}
+
+	if (_frame.empty() || _overlayFrame.empty())
+	{
+		return std::unexpected(Error::MAT_EMPTY);
+	}
+
+	cv::absdiff(_frame, _overlayFrame, _diffFrame);
+
+	if (additive)
+	{
+		if (_additiveFrame.empty() || _additiveFrame.size() != _diffFrame.size() || _additiveFrame.type() != _diffFrame.type())
+		{
+			_additiveFrame = cv::Mat::zeros(_diffFrame.size(), _diffFrame.type());
+		}
+
+		cv::Mat temp;
+		cv::add(_diffFrame, _additiveFrame, temp);
+		
+		_additiveFrame = temp;
+
+		return _additiveFrame;
+	}
+	
+	return _diffFrame;
 }
 
-void pz::MotionExtraction::render()
+auto pz::MotionExtraction::clearAdditiveFrame() -> void
 {
-	cv::Mat frame, overlayFrame, diffFrame;
-
-	while (true)
-	{
-
-		auto currentFrame = _videoCapture->get(cv::CAP_PROP_POS_FRAMES);
-
-		std::size_t targetFrame = std::clamp(static_cast<double>( currentFrame - _frameOffset), 0.0, currentFrame);
-
-		_videoCapture->set(cv::CAP_PROP_POS_FRAMES, targetFrame);
-		_videoCapture->read(overlayFrame);
-
-		_videoCapture->set(cv::CAP_PROP_POS_FRAMES, currentFrame);
-		_videoCapture->read(frame);
-
-		if (frame.empty() || overlayFrame.empty())
-			break;
-
-	
-		cv::absdiff(frame, overlayFrame, diffFrame);
-
-		cv::imshow("Frame", diffFrame);
-
-		// Press  ESC on keyboard to exit
-		char c = (char)cv::waitKey(25);
-		if (c == 27)
-			break;
-	}
+	_additiveFrame.release();
 }
