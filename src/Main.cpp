@@ -7,13 +7,19 @@
 #include "opencv2/opencv.hpp"
 #include "opencv2/highgui.hpp"
 
-pz::MotionExtraction extraction{ "../samples/snow.mp4" };
+pz::MotionExtraction extraction{ "../samples/beach.mp4" };
 
-int seekbar = 0;
-int offsetSeekbar = 0;
+int seekbar{};
+int offsetSeekbar{};
+int additive{};
+
+bool play{ false };
+
 auto windowName{ "Motion Extraction" };
 auto seekbarName{ "Seekbar" };
 auto offsetName{ "Offset" };
+auto additiveName{ "Additive" };
+
 static auto on_seekbarChange(int progress, void* type) -> void
 {
 	seekbar = progress;
@@ -24,19 +30,20 @@ static auto on_offsetChange(int progress, void* type) -> void
 	offsetSeekbar = progress;
 }
 
-void myButtonName_callback(int state, void* userData) {
-	// do something
-	printf("Button pressed\r\n");
+static auto on_additiveChange(int progress, void* type) -> void
+{
+	extraction.additive = static_cast<bool>(progress);
 }
 
 int main()
 {
-
 	cv::namedWindow(windowName, cv::WINDOW_KEEPRATIO);
 
 	cv::createTrackbar(seekbarName, windowName, &seekbar, extraction.totalFrames, on_seekbarChange);
 
 	cv::createTrackbar(offsetName, windowName, &offsetSeekbar, extraction.totalFrames, on_offsetChange);
+
+	cv::createTrackbar(additiveName, windowName, &additive, 1, on_additiveChange);
 
 	while (true) {
 
@@ -67,13 +74,26 @@ int main()
 		}
 		else
 		{
-			++seekbar;
+			if (play) 
+			{
+				++seekbar;
+			}
+			
 		}
 
-		// Press  ESC on keyboard to exit
-		char c = (char)cv::waitKey(25);
-		if (c == 27)
+		char key = static_cast<char> (cv::waitKey(25));
+
+		switch (key)
+		{
+		case static_cast<int>(27):
+			return 0;
+		case 'c':
+			extraction.clearAdditiveFrame();
 			break;
+		case 'p':
+			play = !play;
+			break;
+		}
 	}
 
 
