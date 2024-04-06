@@ -7,19 +7,44 @@
 #include "opencv2/opencv.hpp"
 #include "opencv2/highgui.hpp"
 
+pz::MotionExtraction extraction{ "../samples/snow.mp4" };
+
+int seekbar = 0;
+int offsetSeekbar = 0;
+auto windowName{ "Motion Extraction" };
+auto seekbarName{ "Seekbar" };
+auto offsetName{ "Offset" };
+static auto on_seekbarChange(int progress, void* type) -> void
+{
+	seekbar = progress;
+}
+
+static auto on_offsetChange(int progress, void* type) -> void
+{
+	offsetSeekbar = progress;
+}
+
+void myButtonName_callback(int state, void* userData) {
+	// do something
+	printf("Button pressed\r\n");
+}
+
 int main()
 {
-	auto windowName{ "Motion Extraction" };
 
 	cv::namedWindow(windowName, cv::WINDOW_KEEPRATIO);
 
-	pz::MotionExtraction extraction{ "../samples/walk2.mp4" };
+	cv::createTrackbar(seekbarName, windowName, &seekbar, extraction.totalFrames, on_seekbarChange);
 
-	extraction.frameOffset = 1000;
+	cv::createTrackbar(offsetName, windowName, &offsetSeekbar, extraction.totalFrames, on_offsetChange);
 
-	for (double f = 0; f < extraction.totalFrames; ++f)
-	{
-		auto mat = extraction.getDiff(f);
+	while (true) {
+
+		cv::setTrackbarPos(seekbarName, windowName, seekbar);
+
+		extraction.frameOffset = offsetSeekbar;
+
+		auto mat = extraction.getDiff(seekbar);
 
 		if (mat.has_value())
 		{
@@ -27,13 +52,22 @@ int main()
 		}
 		else if (mat.error() == pz::Error::MAT_EMPTY)
 		{
-			std::println(stderr,"Error: MAT_EMPTY");
-			break;
+			std::println(stderr, "Error: MAT_EMPTY");
+
 		}
 		else if (mat.error() == pz::Error::READ_ERROR)
 		{
 			std::println(stderr, "Error: READ_ERROR");
-			break;
+
+		}
+
+		if (seekbar >= extraction.totalFrames)
+		{
+			seekbar = 0;
+		}
+		else
+		{
+			++seekbar;
 		}
 
 		// Press  ESC on keyboard to exit
@@ -42,6 +76,6 @@ int main()
 			break;
 	}
 
+
 	return 0;
 }
-

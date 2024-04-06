@@ -18,7 +18,7 @@ find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS}) 
 
 # Add source to this project's executable.
-add_executable (MotionExtraction "src/Main.cpp"  "src/MotionExtraction.h" "src/MotionExtraction.cpp")
+add_executable (MotionExtraction "src/Main.cpp"  "src/MotionExtraction.h" "src/MotionExtraction.cpp" )
 
 
 target_link_libraries(MotionExtraction ${OpenCV_LIBS})

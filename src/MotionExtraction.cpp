@@ -42,7 +42,7 @@ auto pz::MotionExtraction::getDiff(double currentOffset) -> std::expected<cv::Ma
 	{
 		return std::unexpected(Error::MAT_EMPTY);
 	}
-		
+	
 
 	cv::absdiff(_frame, _overlayFrame, _diffFrame);
 	
